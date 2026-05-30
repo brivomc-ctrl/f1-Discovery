@@ -1,0 +1,6 @@
+{
+  "name": "Formula 1 Hub",
+  "description": "A premium, data-rich F1 discovery platform featuring drivers, teams, race schedules, historical trophies, sponsors, helmet designs, and an interactive contact desk.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

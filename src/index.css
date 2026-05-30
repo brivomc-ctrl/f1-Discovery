@@ -1,0 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&family=Syncopate:wght@700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-speed: "Syncopate", sans-serif;
+}
+
+/* Fallback classes in case Tailwind fails to load in sandbox */
+.f1-red { color: #E10600; }
+.bg-f1-red { background-color: #E10600; }
+
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.card-gradient {
+  background: linear-gradient(135deg, rgba(16,16,16,1) 0%, rgba(35,35,35,1) 100%);
+}
+
+.tab-active {
+  border-bottom: 2px solid #E10600;
+  color: #E10600;
+}
+
+.stat-value {
+  font-family: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 800;
+  font-stretch: condensed;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #E10600;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #FF1C14;
+}
+
+/* F1 carbon grid helper */
+.carbon-grid {
+  background-color: #050505;
+  background-image: 
+    linear-gradient(45deg, #0d0d0d 25%, transparent 25%), 
+    linear-gradient(-45deg, #0d0d0d 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, #0d0d0d 75%), 
+    linear-gradient(-45deg, transparent 75%, #0d0d0d 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+}
+
+.glow-red {
+  box-shadow: 0 0 20px rgba(225, 6, 0, 0.25);
+}
+
+.text-gradient-red {
+  background: linear-gradient(135deg, #FFFFFF 0%, #E10600 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.team-glow {
+  filter: drop-shadow(0 0 8px var(--team-color, #E10600));
+}
+
+
