@@ -11,7 +11,8 @@ import {
   Sparkles, 
   ShieldCheck, 
   ChevronRight,
-  Info
+  Info,
+  Search
 } from 'lucide-react';
 import { F1_TEAMS } from '../../data/f1Data';
 
@@ -177,10 +178,73 @@ const CONSTRUCTOR_CAR_SPECS: CarSpec[] = [
 export default function GarageAnatomy() {
   const [selectedTeamId, setSelectedTeamId] = useState<string>('mclaren');
   const [selectedComponentId, setSelectedComponentId] = useState<string>('front-wing');
+  const [componentSearch, setComponentSearch] = useState<string>('');
+  const [searchAcrossAllTeams, setSearchAcrossAllTeams] = useState<boolean>(false);
 
   const teamCar = CONSTRUCTOR_CAR_SPECS.find(c => c.teamId === selectedTeamId) || CONSTRUCTOR_CAR_SPECS[0];
   const teamMeta = F1_TEAMS.find(t => t.id === selectedTeamId) || F1_TEAMS[0];
-  const activeComponent = teamCar.components.find(comp => comp.id === selectedComponentId) || teamCar.components[0];
+
+  // Logic to search across selected or all teams
+  const filteredComponents = (() => {
+    const s = componentSearch.trim().toLowerCase();
+    if (!s) {
+      return teamCar.components.map(comp => ({
+        ...comp,
+        teamId: selectedTeamId,
+        teamName: teamMeta.name,
+        color: teamMeta.color
+      }));
+    }
+
+    if (searchAcrossAllTeams) {
+      const results: any[] = [];
+      CONSTRUCTOR_CAR_SPECS.forEach(spec => {
+        const team = F1_TEAMS.find(t => t.id === spec.teamId) || F1_TEAMS[0];
+        spec.components.forEach(comp => {
+          if (
+            comp.name.toLowerCase().includes(s) ||
+            comp.material.toLowerCase().includes(s) ||
+            comp.description.toLowerCase().includes(s)
+          ) {
+            results.push({
+              ...comp,
+              teamId: spec.teamId,
+              teamName: team.name,
+              color: team.color
+            });
+          }
+        });
+      });
+      return results;
+    } else {
+      return teamCar.components
+        .filter(comp => 
+          comp.name.toLowerCase().includes(s) ||
+          comp.material.toLowerCase().includes(s) ||
+          comp.description.toLowerCase().includes(s)
+        )
+        .map(comp => ({
+          ...comp,
+          teamId: selectedTeamId,
+          teamName: teamMeta.name,
+          color: teamMeta.color
+        }));
+    }
+  })();
+
+  const activeComponent = (() => {
+    const exists = filteredComponents.find(comp => comp.id === selectedComponentId && comp.teamId === selectedTeamId);
+    if (exists) {
+      const spec = CONSTRUCTOR_CAR_SPECS.find(c => c.teamId === selectedTeamId) || CONSTRUCTOR_CAR_SPECS[0];
+      return spec.components.find(comp => comp.id === selectedComponentId) || spec.components[0];
+    }
+    if (filteredComponents.length > 0) {
+      const first = filteredComponents[0];
+      const spec = CONSTRUCTOR_CAR_SPECS.find(c => c.teamId === first.teamId) || CONSTRUCTOR_CAR_SPECS[0];
+      return spec.components.find(comp => comp.id === first.id) || spec.components[0];
+    }
+    return teamCar.components.find(comp => comp.id === selectedComponentId) || teamCar.components[0];
+  })();
 
   return (
     <div className="bg-[#0b0c10]/40 border border-zinc-800/80 rounded-2xl p-4 md:p-6 mb-6">
@@ -369,44 +433,99 @@ export default function GarageAnatomy() {
             </div>
           </div>
 
-          {/* COMPONENT INSPECTOR SELECT BUTTON CARDS */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-            {teamCar.components.map((comp) => {
-              const isSelected = selectedComponentId === comp.id;
-              return (
-                <button
-                  key={comp.id}
-                  onClick={() => setSelectedComponentId(comp.id)}
-                  className={`relative p-3.5 rounded-xl border text-left transition-all duration-250 tracking-tight cursor-pointer overflow-hidden ${
-                    isSelected
-                      ? 'border-transparent text-white'
-                      : 'bg-black/30 border-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-800'
-                  }`}
-                >
-                  {isSelected && (
-                    <motion.div
-                      layoutId="activeComponentCardBg"
-                      className="absolute inset-0 bg-zinc-900/90 shadow-lg"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                  <span className="relative z-10 text-[9px] font-mono font-bold block text-zinc-500 uppercase">INSPECT</span>
-                  <span className="relative z-10 text-xs font-display font-semibold block uppercase max-w-full truncate">{comp.name.split(' ')[0]}</span>
-                  <span className="relative z-10 text-[10px] font-mono block mt-1 font-bold animate-[pulse_3s_infinite]" style={{ color: isSelected ? teamMeta.color : '#888' }}>
-                    {comp.singleUnitCost}
-                  </span>
-                  {isSelected && (
-                    <motion.div 
-                      layoutId="activeComponentEdge"
-                      className="absolute bottom-0 left-3 right-3 h-0.5 rounded-t z-10"
-                      style={{ backgroundColor: teamMeta.color }}
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                </button>
-              );
-            })}
+          {/* SEARCH & FILTER CONTROLS FOR CAR COMPONENTS */}
+          <div className="bg-zinc-950/60 border border-zinc-900 rounded-xl p-3.5 space-y-3">
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch justify-between">
+              <div className="relative flex-grow">
+                <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 block" />
+                <input
+                  id="garage-spec-search-input"
+                  type="text"
+                  placeholder="Search material, part name, or spec..."
+                  value={componentSearch}
+                  onChange={(e) => setComponentSearch(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-800 rounded-xl py-2 pl-9 pr-4 text-xs text-zinc-200 outline-none focus:border-[#E10600] font-mono transition-all"
+                />
+              </div>
+
+              <label className="flex items-center gap-2.5 cursor-pointer text-xs font-mono text-zinc-400 hover:text-zinc-200 select-none">
+                <input
+                  type="checkbox"
+                  checked={searchAcrossAllTeams}
+                  onChange={(e) => setSearchAcrossAllTeams(e.target.checked)}
+                  className="accent-[#E10600] w-4 h-4 rounded bg-zinc-950 border-zinc-800"
+                />
+                <span>Search all teams</span>
+              </label>
+            </div>
+
+            {componentSearch.trim() && (
+              <p className="text-[10px] font-mono text-zinc-500">
+                Found {filteredComponents.length} matching components {searchAcrossAllTeams ? "across ALL constructor fleets" : `within ${teamMeta.name}`}
+              </p>
+            )}
           </div>
+
+          {/* COMPONENT INSPECTOR SELECT BUTTON CARDS */}
+          {filteredComponents.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+              {filteredComponents.map((comp) => {
+                const isSelected = selectedComponentId === comp.id && selectedTeamId === comp.teamId;
+                return (
+                  <button
+                    key={`${comp.teamId}-${comp.id}`}
+                    onClick={() => {
+                      setSelectedTeamId(comp.teamId);
+                      setSelectedComponentId(comp.id);
+                    }}
+                    className={`relative p-3 rounded-xl border text-left transition-all duration-250 tracking-tight cursor-pointer overflow-hidden ${
+                      isSelected
+                        ? 'border-transparent text-white bg-zinc-900/90'
+                        : 'bg-black/30 border-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-800'
+                    }`}
+                  >
+                    {isSelected && (
+                      <motion.div
+                        layoutId="activeComponentCardBg"
+                        className="absolute inset-0 bg-zinc-900/95 shadow-lg border border-zinc-800"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    <div className="relative z-10 flex flex-col h-full justify-between">
+                      <div>
+                        {searchAcrossAllTeams && (
+                          <span className="text-[7.5px] font-mono font-black block truncate" style={{ color: comp.color }}>
+                            {comp.teamName.toUpperCase()}
+                          </span>
+                        )}
+                        <span className="text-[9px] font-mono font-bold block text-zinc-500 uppercase mt-0.5">
+                          {comp.id.replace('-', ' ').toUpperCase()}
+                        </span>
+                        <span className="text-xs font-display font-semibold block uppercase max-w-full truncate mt-1">
+                          {comp.name}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono block mt-2 font-bold" style={{ color: isSelected ? comp.color : '#888' }}>
+                        {comp.singleUnitCost}
+                      </span>
+                    </div>
+                    {isSelected && (
+                      <motion.div 
+                        layoutId="activeComponentEdge"
+                        className="absolute bottom-0 left-2 right-2 h-0.5 rounded-t z-10"
+                        style={{ backgroundColor: comp.color }}
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="p-6 bg-zinc-950/40 border border-zinc-900 rounded-xl text-center font-mono text-xs text-zinc-500">
+              No chassis specifications found matching other parts or parameters.
+            </div>
+          )}
         </div>
 
         {/* RIGHT COLUMN: DETAIL DECK & COMPONENT METRICS */}

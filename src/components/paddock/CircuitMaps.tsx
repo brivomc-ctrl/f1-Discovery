@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { MapPin, Trophy, Navigation, Compass, Star, Zap } from 'lucide-react';
+import { MapPin, Trophy, Navigation, Compass, Star, Zap, Search } from 'lucide-react';
 
 interface SectorPoint {
   id: string;
@@ -174,6 +174,7 @@ const CIRCUITS: Circuit[] = [
 export default function CircuitMaps() {
   const [activeCircuitId, setActiveCircuitId] = useState<string>('monza');
   const [activePointId, setActivePointId] = useState<string>('prima_variante');
+  const [mapSearch, setMapSearch] = useState<string>('');
 
   const circuit = CIRCUITS.find(c => c.id === activeCircuitId) || CIRCUITS[0];
   const point = circuit.points.find(p => p.id === activePointId) || circuit.points[0];
@@ -185,6 +186,51 @@ export default function CircuitMaps() {
       setActivePointId(newCircuit.points[0].id);
     }
   };
+
+  const searchResults = (() => {
+    const query = mapSearch.trim().toLowerCase();
+    if (!query) return [];
+
+    const matches: {
+      type: 'track' | 'milestone';
+      circuitId: string;
+      circuitName: string;
+      pointId?: string;
+      title: string;
+      subtitle: string;
+    }[] = [];
+
+    CIRCUITS.forEach(c => {
+      if (c.name.toLowerCase().includes(query) || c.location.toLowerCase().includes(query)) {
+        matches.push({
+          type: 'track',
+          circuitId: c.id,
+          circuitName: c.name,
+          title: c.name,
+          subtitle: c.location
+        });
+      }
+
+      c.points.forEach(pt => {
+        if (
+          pt.name.toLowerCase().includes(query) ||
+          pt.historicalStory.toLowerCase().includes(query) ||
+          pt.type.toLowerCase().includes(query)
+        ) {
+          matches.push({
+            type: 'milestone',
+            circuitId: c.id,
+            circuitName: c.name,
+            pointId: pt.id,
+            title: pt.name,
+            subtitle: `${c.id.toUpperCase()} • ${pt.speed} • ${pt.gear} (${pt.type.replace('_', ' ').toUpperCase()})`
+          });
+        }
+      });
+    });
+
+    return matches;
+  })();
 
   return (
     <div className="bg-[#0b0c10]/40 border border-zinc-800/80 rounded-2xl p-4 md:p-6 mb-6">
@@ -223,6 +269,69 @@ export default function CircuitMaps() {
             );
           })}
         </div>
+      </div>
+
+      {/* MAP & MILESTONE SEARCH BAR */}
+      <div className="mb-6 relative z-20">
+        <div className="relative">
+          <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 block" />
+          <input
+            id="map-track-search-input"
+            type="text"
+            placeholder="Search circuit names, locations, or key sectors (e.g. 'Eau Rouge', 'Ascari', 'Hairpin', 'Tunnel')..."
+            value={mapSearch}
+            onChange={(e) => setMapSearch(e.target.value)}
+            className="w-full bg-zinc-950/80 border border-zinc-850 rounded-xl py-2.5 pl-10 pr-4 text-xs text-zinc-200 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/25 font-mono transition-all"
+          />
+          {mapSearch && (
+            <button 
+              onClick={() => setMapSearch('')}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-zinc-500 hover:text-zinc-300 font-bold"
+            >
+              CLEAR
+            </button>
+          )}
+        </div>
+
+        {/* Predictive search results */}
+        {searchResults.length > 0 && (
+          <div className="absolute left-0 right-0 mt-1.5 bg-zinc-950 border border-zinc-850 rounded-xl p-2 max-h-56 overflow-y-auto z-30 shadow-2xl space-y-1">
+            <div className="text-[9px] font-mono font-bold text-zinc-500 block px-2 py-1 uppercase tracking-wider">
+              Matching Coordinates & Milestones ({searchResults.length})
+            </div>
+            {searchResults.map((res, index) => (
+              <button
+                key={`${res.circuitId}-${res.pointId}-${index}`}
+                onClick={() => {
+                  handleCircuitChange(res.circuitId);
+                  if (res.pointId) {
+                    setActivePointId(res.pointId);
+                  }
+                  setMapSearch('');
+                }}
+                className="w-full text-left p-2 rounded-lg hover:bg-emerald-500/10 hover:border-emerald-500/30 border border-transparent transition-all flex items-center justify-between cursor-pointer group"
+              >
+                <div>
+                  <span className="text-xs font-display font-black text-white group-hover:text-emerald-400 block transition-all">
+                    {res.title}
+                  </span>
+                  <span className="text-[10px] font-mono text-zinc-400 block mt-0.5 animate-pulse">
+                    {res.subtitle}
+                  </span>
+                </div>
+                <span className="text-[9px] font-mono px-2 py-0.5 rounded border bg-zinc-900 text-zinc-400 border-zinc-800 uppercase font-black tracking-widest group-hover:border-emerald-500/30 group-hover:text-emerald-400">
+                  {res.type}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {mapSearch && searchResults.length === 0 && (
+          <div className="absolute left-0 right-0 mt-1.5 bg-zinc-950 border border-zinc-850 rounded-xl p-4 text-center z-30 shadow-2xl text-zinc-500 font-mono text-xs">
+            No circuit names or sector milestones matched your search phrase.
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">

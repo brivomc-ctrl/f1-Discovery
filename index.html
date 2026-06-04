@@ -1,18 +1,32 @@
 <!doctype html>
 <html lang="en">
- <head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>F1 DESCOVERY</title>
     <link rel="icon" type="image/png" href="/FORMULA_1_3.png" />
-    
-    <!-- This right here is the magic SEO tag! -->
+    <meta name="google-site-verification" content="qoWMXh25WgS9-PjyW-q8F12OU7Xq0K5rtCBLrGfsbYM" />
     <meta name="description" content="The ultimate F1 Discovery platform. Gain unfiltered paddock technical insight, track live stats, dissect custom helmet design stories, and browse historic trophies." />
-</head>
-  <body>
+    <script>
+      (function() {
+        try {
+          var f = window.fetch;
+          if (f) {
+            Object.defineProperty(window, 'fetch', {
+              get: function() { return f; },
+              set: function(v) { f = v; },
+              configurable: true,
+              enumerable: true
+            });
+          }
+        } catch (e) {
+          console.warn("Fetch polyfill skipped:", e);
+        }
+      })();
+    </script>
+  </head>
+  <body class="bg-black text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
-
