@@ -2227,7 +2227,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
             <span className="font-display font-black italic text-white transform skew-x-[-12deg] bg-[#E10600] text-sm px-2 py-0.5 rounded">F1 DISCOVERY</span>
-            <span className="font-mono text-[10px]">© 2026 Paddock telemetry. All Rights Respected.</span>
+            <span className="font-mono text-[10px]">© 2026 Amar Mohmmed. All Rights Respected.</span>
           </div>
           <div className="flex flex-wrap gap-4 font-mono text-[10px]">
             <a href="#drivers" onClick={() => { setActiveTab('drivers'); window.scrollTo(0,0); }} className="hover:text-zinc-300">Pilots</a>
